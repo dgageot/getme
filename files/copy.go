@@ -34,9 +34,6 @@ func Copy(src, dst string) error {
 		out = os.Stdout
 	}
 
-	if _, err = io.Copy(out, in); err != nil {
-		return err
-	}
-
-	return nil
+	_, err = io.Copy(out, in)
+	return err
 }
