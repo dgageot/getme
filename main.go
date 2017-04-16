@@ -58,6 +58,13 @@ func main() {
 		},
 	})
 
+	rootCmd.AddCommand(&cobra.Command{
+		Use: "Prune",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return Prune()
+		},
+	})
+
 	if err := rootCmd.Execute(); err != nil {
 		log.Fatal(err)
 	}
@@ -100,6 +107,11 @@ func UnzipSingleFile(url string, name string, destination string) error {
 	log.Println("Unzip", name, "from", url, "to", destination)
 
 	return zip.ExtractFile(source, name, destination)
+}
+
+// Prune prunes the cache.
+func Prune() error {
+	return cache.Prune()
 }
 
 func headers() []string {
