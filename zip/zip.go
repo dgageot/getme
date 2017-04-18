@@ -2,7 +2,6 @@ package zip
 
 import (
 	"archive/zip"
-	"io"
 	"os"
 	"path/filepath"
 
@@ -11,17 +10,13 @@ import (
 )
 
 func Extract(source string, destinationFolder string) error {
-	if err := files.MkdirAll(destinationFolder); err != nil {
-		return err
-	}
-
 	r, err := zip.OpenReader(source)
 	if err != nil {
 		return err
 	}
 	defer r.Close()
 
-	extractAndWriteFile := func(f *zip.File) error {
+	extractFile := func(f *zip.File) error {
 		rc, err := f.Open()
 		if err != nil {
 			return err
@@ -33,22 +28,11 @@ func Extract(source string, destinationFolder string) error {
 			return os.MkdirAll(path, f.Mode())
 		}
 
-		if err := files.MkdirAll(filepath.Dir(path)); err != nil {
-			return err
-		}
-
-		dest, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, f.Mode())
-		if err != nil {
-			return err
-		}
-		defer dest.Close()
-
-		_, err = io.Copy(dest, rc)
-		return err
+		return files.CopyFrom(path, f.Mode(), rc)
 	}
 
 	for _, f := range r.File {
-		err := extractAndWriteFile(f)
+		err := extractFile(f)
 		if err != nil {
 			return err
 		}
@@ -58,17 +42,13 @@ func Extract(source string, destinationFolder string) error {
 }
 
 func ExtractFile(source string, name string, destination string) error {
-	if err := files.MkdirAll(filepath.Dir(destination)); err != nil {
-		return err
-	}
-
 	r, err := zip.OpenReader(source)
 	if err != nil {
 		return err
 	}
 	defer r.Close()
 
-	extractAndWriteFile := func(f *zip.File) (bool, error) {
+	extractFile := func(f *zip.File) (bool, error) {
 		if f.Name != name {
 			return false, nil
 		}
@@ -79,13 +59,7 @@ func ExtractFile(source string, name string, destination string) error {
 		}
 		defer rc.Close()
 
-		dest, err := os.OpenFile(destination, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, f.Mode())
-		if err != nil {
-			return false, err
-		}
-		defer dest.Close()
-
-		if _, err = io.Copy(dest, rc); err != nil {
+		if err := files.CopyFrom(destination, f.Mode(), rc); err != nil {
 			return false, err
 		}
 
@@ -93,7 +67,7 @@ func ExtractFile(source string, name string, destination string) error {
 	}
 
 	for _, f := range r.File {
-		done, err := extractAndWriteFile(f)
+		done, err := extractFile(f)
 		if err != nil {
 			return err
 		}

@@ -4,9 +4,11 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"strings"
 
 	"github.com/dgageot/getme/cache"
 	"github.com/dgageot/getme/files"
+	"github.com/dgageot/getme/tar"
 	"github.com/dgageot/getme/zip"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -122,7 +124,14 @@ func Unzip(url string, destinationDirectory string) error {
 
 	log.Println("Unzip", url, "to", destinationDirectory)
 
-	return zip.Extract(source, destinationDirectory)
+	if strings.HasSuffix(source, ".zip") {
+		return zip.Extract(source, destinationDirectory)
+	}
+	if strings.HasSuffix(source, ".tar") || strings.HasSuffix(source, ".tar.gz") || strings.HasSuffix(source, ".tgz") {
+		return tar.Extract(source, destinationDirectory)
+	}
+
+	return errors.New("Unsupported archive: " + source)
 }
 
 // Download retrieves an url from the cache or download it if it's absent.
@@ -135,7 +144,14 @@ func UnzipSingleFile(url string, name string, destination string) error {
 
 	log.Println("Unzip", name, "from", url, "to", destination)
 
-	return zip.ExtractFile(source, name, destination)
+	if strings.HasSuffix(source, ".zip") {
+		return zip.ExtractFile(source, name, destination)
+	}
+	if strings.HasSuffix(source, ".tar") || strings.HasSuffix(source, ".tar.gz") || strings.HasSuffix(source, ".tgz") {
+		return tar.ExtractFile(source, name, destination)
+	}
+
+	return errors.New("Unsupported archive: " + source)
 }
 
 // Prune prunes the cache.
