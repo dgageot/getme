@@ -148,5 +148,5 @@ func headers() []string {
 		return nil
 	}
 
-	return []string{fmt.Sprintf("Authorization=Bearer%s", authToken)}
+	return []string{fmt.Sprintf("Authorization=Bearer %s", authToken)}
 }
