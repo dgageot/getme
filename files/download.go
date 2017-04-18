@@ -2,10 +2,8 @@ package files
 
 import (
 	"fmt"
-	"io"
 	"net/http"
 	"os"
-	"path/filepath"
 	"strings"
 	"github.com/pkg/errors"
 )
@@ -23,16 +21,6 @@ func Download(url string, destination string, headers []string) error {
 }
 
 func download(url string, destination string, headers []string) error {
-	if err := MkdirAll(filepath.Dir(destination)); err != nil {
-		return err
-	}
-
-	out, err := os.Create(destination)
-	if err != nil {
-		return err
-	}
-	defer out.Close()
-
 	client := &http.Client{}
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -57,6 +45,5 @@ func download(url string, destination string, headers []string) error {
 		return errors.New(resp.Status)
 	}
 
-	_, err = io.Copy(out, resp.Body)
-	return err
+	return CopyFrom(destination, 0666, resp.Body)
 }
