@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"github.com/pkg/errors"
 )
 
 // Download downloads an url to a destination file. Additional headers can be given.
@@ -51,6 +52,10 @@ func download(url string, destination string, headers []string) error {
 		return err
 	}
 	defer resp.Body.Close()
+
+	if resp.StatusCode >= http.StatusBadRequest {
+		return errors.New(resp.Status)
+	}
 
 	_, err = io.Copy(out, resp.Body)
 	return err
