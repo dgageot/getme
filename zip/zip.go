@@ -33,7 +33,7 @@ func Extract(source string, destinationFolder string) error {
 			return os.MkdirAll(path, f.Mode())
 		}
 
-		if err := os.MkdirAll(filepath.Dir(path), f.Mode()); err != nil {
+		if err := files.MkdirAll(filepath.Dir(path)); err != nil {
 			return err
 		}
 
