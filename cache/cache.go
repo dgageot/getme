@@ -63,6 +63,7 @@ func Download(url string, headers []string) (path string, err error) {
 	return destination, files.Download(url, destination, headers)
 }
 
+// SaveAccessedUrl appends a url to the file that lists recently accessed urls.
 func SaveAccessedUrl(url string) error {
 	accessFile, err := PathToFileInCache(recentFile)
 	if err != nil {
