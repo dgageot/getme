@@ -13,11 +13,20 @@ import (
 // This is helpful to pass authentication tokens.
 func Download(url string, destination string, headers []string) error {
 	destinationTmp := destination + ".tmp"
-	if err := MkdirAll(filepath.Dir(destinationTmp)); err != nil {
+
+	if err := download(url, destinationTmp, headers); err != nil {
 		return err
 	}
 
-	out, err := os.Create(destinationTmp)
+	return os.Rename(destinationTmp, destination)
+}
+
+func download(url string, destination string, headers []string) error {
+	if err := MkdirAll(filepath.Dir(destination)); err != nil {
+		return err
+	}
+
+	out, err := os.Create(destination)
 	if err != nil {
 		return err
 	}
@@ -44,9 +53,5 @@ func Download(url string, destination string, headers []string) error {
 	defer resp.Body.Close()
 
 	_, err = io.Copy(out, resp.Body)
-	if err != nil {
-		return err
-	}
-
-	return os.Rename(destinationTmp, destination)
+	return err
 }
