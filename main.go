@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"log"
 
 	"github.com/dgageot/getme/cache"
@@ -21,13 +22,25 @@ func main() {
 	rootCmd.AddCommand(&cobra.Command{
 		Use: "Download",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) < 1 {
+				return errors.New("An url must be provided")
+			}
+			url := args[0]
+
+			return Download(url)
+		},
+	})
+
+	rootCmd.AddCommand(&cobra.Command{
+		Use: "Copy",
+		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) < 2 {
-				return errors.New("An url and a destination should be provided")
+				return errors.New("An url and a destination must be provided")
 			}
 			url := args[0]
 			destination := args[1]
 
-			return Download(url, destination)
+			return Copy(url, destination)
 		},
 	})
 
@@ -35,7 +48,7 @@ func main() {
 		Use: "Unzip",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) < 2 {
-				return errors.New("An url and a destination folder should be provided")
+				return errors.New("An url and a destination folder must be provided")
 			}
 			url := args[0]
 			destinationFolder := args[1]
@@ -48,7 +61,7 @@ func main() {
 		Use: "UnzipSingleFile",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) < 3 {
-				return errors.New("An url, a file name and a destination should be provided")
+				return errors.New("An url, a file name and a destination must be provided")
 			}
 			url := args[0]
 			name := args[1]
@@ -71,8 +84,24 @@ func main() {
 }
 
 // Download retrieves an url from the cache or download it if it's absent.
+// Then print the path to that file to stdout.
+func Download(url string) error {
+	// Discard all the logs. We only want to output the path to the file
+	log.SetOutput(ioutil.Discard)
+
+	source, err := cache.Download(url, headers())
+	if err != nil {
+		return err
+	}
+
+	fmt.Println(source)
+
+	return nil
+}
+
+// Copy retrieves an url from the cache or download it if it's absent.
 // Then it copies the file to a destination path.
-func Download(url string, destination string) error {
+func Copy(url string, destination string) error {
 	source, err := cache.Download(url, headers())
 	if err != nil {
 		return err
