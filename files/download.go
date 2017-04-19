@@ -1,13 +1,13 @@
 package files
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"os"
-	"strings"
 
+	"github.com/dgageot/getme/appveyor"
 	"github.com/dgageot/getme/github"
+	http_headers "github.com/dgageot/getme/headers"
 	"github.com/pkg/errors"
 )
 
@@ -16,26 +16,35 @@ import (
 func Download(url string, destination string, headers []string) error {
 	destinationTmp := destination + ".tmp"
 
-	err := downloadURL(url, destinationTmp, headers)
-	if err == nil {
-		return os.Rename(destinationTmp, destination)
+	actualUrl := url
+	actualHeaders := headers
+
+	if github.ReleaseURL.MatchString(url) {
+		log.Println("Github release url detected")
+
+		assetUrl, err := github.AssetUrl(url, headers)
+		if err != nil {
+			return err
+		}
+
+		log.Println("Github asset url is:", assetUrl)
+
+		actualUrl = assetUrl
+		actualHeaders = append(actualHeaders, "Accept=application/octet-stream")
+	} else if appveyor.ArtifactURL.MatchString(url) {
+		log.Println("Appveyor url detected")
+
+		artifactUrl, err := appveyor.ArtifactUrl(url, headers)
+		if err != nil {
+			return err
+		}
+
+		log.Println("Appveyor artifact url is:", artifactUrl)
+
+		actualUrl = artifactUrl
 	}
 
-	if !github.ReleaseURL.MatchString(url) {
-		return err
-	}
-
-	log.Println("Github release url detected")
-
-	assetUrl, err := github.AssetUrl(url, headers)
-	if err != nil {
-		return err
-	}
-
-	log.Println("Github asset url is:", assetUrl)
-
-	headers = append(headers, "Accept=application/octet-stream")
-	err = downloadURL(assetUrl, destinationTmp, headers)
+	err := downloadURL(actualUrl, destinationTmp, actualHeaders)
 	if err != nil {
 		return err
 	}
@@ -55,7 +64,7 @@ func downloadURL(url string, destination string, headers []string) error {
 		return err
 	}
 
-	if err := addHeaders(headers, req); err != nil {
+	if err := http_headers.Add(headers, req); err != nil {
 		return err
 	}
 
@@ -70,16 +79,4 @@ func downloadURL(url string, destination string, headers []string) error {
 	}
 
 	return CopyFrom(destination, 0666, resp.Body)
-}
-
-func addHeaders(headers []string, req *http.Request) error {
-	for _, header := range headers {
-		parts := strings.Split(header, "=")
-		if len(parts) != 2 {
-			return fmt.Errorf("Invalid header [%s]. Should be [key=value]", header)
-		}
-		req.Header.Add(parts[0], parts[1])
-	}
-
-	return nil
 }
