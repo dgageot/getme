@@ -12,6 +12,7 @@ import (
 	"github.com/dgageot/getme/zip"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+	"github.com/dgageot/getme/urls"
 )
 
 var authToken string
@@ -127,10 +128,10 @@ func Extract(url string, destinationDirectory string) error {
 
 	log.Println("Unzip", url, "to", destinationDirectory)
 
-	if strings.HasSuffix(source, ".zip") {
+	if urls.IsZipArchive(url) {
 		return zip.Extract(source, destinationDirectory)
 	}
-	if strings.HasSuffix(source, ".tar") || strings.HasSuffix(source, ".tar.gz") || strings.HasSuffix(source, ".tgz") {
+	if urls.IsTarArchive(url) {
 		return tar.Extract(source, destinationDirectory)
 	}
 
@@ -149,10 +150,10 @@ func ExtractFiles(url string, files []files.ExtractedFile) error {
 		log.Println("Unzip", file.Source, "from", url, "to", file.Destination)
 	}
 
-	if strings.HasSuffix(source, ".zip") {
+	if urls.IsZipArchive(url) {
 		return zip.ExtractFiles(source, files)
 	}
-	if strings.HasSuffix(source, ".tar") || strings.HasSuffix(source, ".tar.gz") || strings.HasSuffix(source, ".tgz") {
+	if urls.IsTarArchive(url) {
 		return tar.ExtractFiles(source, files)
 	}
 
