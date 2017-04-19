@@ -7,7 +7,8 @@ import (
 	"io/ioutil"
 	"net/http"
 	"regexp"
-	"strings"
+
+	http_headers "github.com/dgageot/getme/headers"
 )
 
 var ReleaseURL = regexp.MustCompile(`https://github.com/([^/]*)/([^/]*)/releases/download/([^/]*)/(.*)`)
@@ -34,7 +35,7 @@ func AssetUrl(url string, headers []string) (string, error) {
 		return "", err
 	}
 
-	if err := addHeaders(headers, req); err != nil {
+	if err := http_headers.Add(headers, req); err != nil {
 		return "", err
 	}
 
@@ -65,16 +66,4 @@ func AssetUrl(url string, headers []string) (string, error) {
 	}
 
 	return "", fmt.Errorf("Unable to find this release: %s", url)
-}
-
-func addHeaders(headers []string, req *http.Request) error {
-	for _, header := range headers {
-		parts := strings.Split(header, "=")
-		if len(parts) != 2 {
-			return fmt.Errorf("Invalid header [%s]. Should be [key=value]", header)
-		}
-		req.Header.Add(parts[0], parts[1])
-	}
-
-	return nil
 }
