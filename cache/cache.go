@@ -43,7 +43,7 @@ func PathToFileInCache(name string) (string, error) {
 
 // Download downloads an url to the cache if needed. Additional headers can be given.
 // This is helpful to pass authentication tokens.
-func Download(url string, headers []string) (path string, err error) {
+func Download(url string, headers []string, force bool) (path string, err error) {
 	destination, err := PathToUrl(url)
 	if err != nil {
 		return "", err
@@ -53,9 +53,11 @@ func Download(url string, headers []string) (path string, err error) {
 		return "", err
 	}
 
-	if _, err := os.Stat(destination); err == nil {
-		log.Println("Already in cache:", url)
-		return destination, nil
+	if !force {
+		if _, err := os.Stat(destination); err == nil {
+			log.Println("Already in cache:", url)
+			return destination, nil
+		}
 	}
 
 	log.Println("Download", url, "to", destination)

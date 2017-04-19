@@ -14,12 +14,16 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var authToken string
+var (
+	authToken string
+	force     bool
+)
 
 func main() {
 	var rootCmd = &cobra.Command{Use: "getme"}
 
 	rootCmd.PersistentFlags().StringVar(&authToken, "authToken", "", "Api authentication token")
+	rootCmd.PersistentFlags().BoolVar(&force, "force", false, "Force download")
 
 	rootCmd.AddCommand(&cobra.Command{
 		Use: "Download",
@@ -94,7 +98,7 @@ func Download(url string) error {
 	// Discard all the logs. We only want to output the path to the file
 	log.SetOutput(ioutil.Discard)
 
-	source, err := cache.Download(url, headers())
+	source, err := cache.Download(url, headers(), force)
 	if err != nil {
 		return err
 	}
@@ -107,7 +111,7 @@ func Download(url string) error {
 // Copy retrieves an url from the cache or download it if it's absent.
 // Then it copies the file to a destination path.
 func Copy(url string, destination string) error {
-	source, err := cache.Download(url, headers())
+	source, err := cache.Download(url, headers(), force)
 	if err != nil {
 		return err
 	}
@@ -120,7 +124,7 @@ func Copy(url string, destination string) error {
 // Extract retrieves an url from the cache or download it if it's absent.
 // Then it unzips the file to a destination directory.
 func Extract(url string, destinationDirectory string) error {
-	source, err := cache.Download(url, headers())
+	source, err := cache.Download(url, headers(), force)
 	if err != nil {
 		return err
 	}
@@ -140,7 +144,7 @@ func Extract(url string, destinationDirectory string) error {
 // ExtractFiles retrieves an url from the cache or download it if it's absent.
 // Then it unzips some files from that zip to a destination path.
 func ExtractFiles(url string, files []files.ExtractedFile) error {
-	source, err := cache.Download(url, headers())
+	source, err := cache.Download(url, headers(), force)
 	if err != nil {
 		return err
 	}

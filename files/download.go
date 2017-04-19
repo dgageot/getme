@@ -40,6 +40,12 @@ func Download(url string, destination string, headers []string) error {
 		return err
 	}
 
+	if _, err := os.Stat(destination); err == nil {
+		if err := os.Remove(destination); err != nil {
+			return err
+		}
+	}
+
 	return os.Rename(destinationTmp, destination)
 }
 
