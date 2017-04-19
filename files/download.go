@@ -18,7 +18,7 @@ func Download(url string, destination string, headers []string) error {
 
 	err := downloadURL(url, destinationTmp, headers)
 	if err == nil {
-		return nil
+		return os.Rename(destinationTmp, destination)
 	}
 
 	if !github.ReleaseURL.MatchString(url) {
