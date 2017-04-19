@@ -47,7 +47,8 @@ func main() {
 	})
 
 	rootCmd.AddCommand(&cobra.Command{
-		Use: "Unzip",
+		Use:     "Extract",
+		Aliases: []string{"Unzip"},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) < 2 {
 				return errors.New("An url and a destination folder must be provided")
@@ -60,7 +61,8 @@ func main() {
 	})
 
 	rootCmd.AddCommand(&cobra.Command{
-		Use: "UnzipSingleFile",
+		Use:     "ExtractSingleFile",
+		Aliases: []string{"UnzipSingleFile"},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) < 3 {
 				return errors.New("An url, a file name and a destination must be provided")
