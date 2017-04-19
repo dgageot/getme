@@ -49,6 +49,11 @@ func Extract(source string, destinationFolder string) error {
 			continue
 		}
 
+		if info.Mode()&os.ModeSymlink == os.ModeSymlink {
+			os.Symlink(header.Linkname, path)
+			continue
+		}
+
 		if err := files.CopyFrom(path, info.Mode(), tarReader); err != nil {
 			return err
 		}
