@@ -67,6 +67,7 @@ func ExtractFiles(source string, filesToExtract []files.ExtractedFile) error {
 		return true, nil
 	}
 
+	extracted := 0
 	for _, f := range r.File {
 		done, err := extractFile(f)
 		if err != nil {
@@ -74,7 +75,10 @@ func ExtractFiles(source string, filesToExtract []files.ExtractedFile) error {
 		}
 
 		if done {
-			return nil
+			extracted++
+			if extracted == len(filesToExtract) {
+				return nil
+			}
 		}
 	}
 

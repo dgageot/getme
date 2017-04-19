@@ -81,6 +81,7 @@ func ExtractFiles(source string, filesToExtract []files.ExtractedFile) error {
 		tarReader = archivetar.NewReader(reader)
 	}
 
+	extracted := 0
 	for {
 		header, err := tarReader.Next()
 		if err == io.EOF {
@@ -95,7 +96,14 @@ func ExtractFiles(source string, filesToExtract []files.ExtractedFile) error {
 			continue
 		}
 
-		return files.CopyFrom(fileToExtract.Destination, header.FileInfo().Mode(), tarReader)
+		if err := files.CopyFrom(fileToExtract.Destination, header.FileInfo().Mode(), tarReader); err != nil {
+			return err
+		}
+
+		extracted++
+		if extracted == len(filesToExtract) {
+			return nil
+		}
 	}
 
 	return errors.New("Files not found")
