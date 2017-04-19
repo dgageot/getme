@@ -22,7 +22,6 @@ func Download(url string, destination string, headers []string) error {
 }
 
 func download(url string, destination string, headers []string) error {
-	client := &http.Client{}
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return err
@@ -36,7 +35,7 @@ func download(url string, destination string, headers []string) error {
 		req.Header.Add(parts[0], parts[1])
 	}
 
-	resp, err := client.Do(req)
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return err
 	}
