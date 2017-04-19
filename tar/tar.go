@@ -7,12 +7,11 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"strings"
-
 	"github.com/dgageot/getme/files"
+	"github.com/dgageot/getme/urls"
 )
 
-func Extract(source string, destinationFolder string) error {
+func Extract(url string, source string, destinationFolder string) error {
 	reader, err := os.Open(source)
 	if err != nil {
 		return err
@@ -20,7 +19,7 @@ func Extract(source string, destinationFolder string) error {
 	defer reader.Close()
 
 	var tarReader *archivetar.Reader
-	if strings.HasSuffix(source, ".tgz") || strings.HasSuffix(source, ".tar.gz") {
+	if urls.IsGzipArchive(url) {
 		archive, err := gzip.NewReader(reader)
 		if err != nil {
 			return err
@@ -62,7 +61,7 @@ func Extract(source string, destinationFolder string) error {
 	return nil
 }
 
-func ExtractFiles(source string, filesToExtract []files.ExtractedFile) error {
+func ExtractFiles(url string, source string, filesToExtract []files.ExtractedFile) error {
 	reader, err := os.Open(source)
 	if err != nil {
 		return err
@@ -70,7 +69,7 @@ func ExtractFiles(source string, filesToExtract []files.ExtractedFile) error {
 	defer reader.Close()
 
 	var tarReader *archivetar.Reader
-	if strings.HasSuffix(source, ".tgz") || strings.HasSuffix(source, ".tar.gz") {
+	if urls.IsGzipArchive(url) {
 		archive, err := gzip.NewReader(reader)
 		if err != nil {
 			return err

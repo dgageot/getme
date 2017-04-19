@@ -1,11 +1,33 @@
 package urls
 
-import "strings"
+import (
+	"net/url"
+	"strings"
+)
 
-func IsTarArchive(url string) bool {
-	return strings.HasSuffix(url, ".tar") || strings.HasSuffix(url, ".tar.gz") || strings.HasSuffix(url, ".tgz")
+func IsTarArchive(rawURL string) bool {
+	parsed, err := url.Parse(rawURL)
+	if err != nil {
+		return false
+	}
+
+	return strings.HasSuffix(parsed.Path, ".tar") || strings.HasSuffix(parsed.Path, ".tar.gz") || strings.HasSuffix(parsed.Path, ".tgz")
 }
 
-func IsZipArchive(url string) bool {
-	return strings.HasSuffix(url, ".zip")
+func IsGzipArchive(rawURL string) bool {
+	parsed, err := url.Parse(rawURL)
+	if err != nil {
+		return false
+	}
+
+	return strings.HasSuffix(parsed.Path, ".tar.gz") || strings.HasSuffix(parsed.Path, ".tgz")
+}
+
+func IsZipArchive(rawURL string) bool {
+	parsed, err := url.Parse(rawURL)
+	if err != nil {
+		return false
+	}
+
+	return strings.HasSuffix(parsed.Path, ".zip")
 }

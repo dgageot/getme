@@ -4,15 +4,14 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-	"strings"
 
 	"github.com/dgageot/getme/cache"
 	"github.com/dgageot/getme/files"
 	"github.com/dgageot/getme/tar"
+	"github.com/dgageot/getme/urls"
 	"github.com/dgageot/getme/zip"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	"github.com/dgageot/getme/urls"
 )
 
 var authToken string
@@ -132,7 +131,7 @@ func Extract(url string, destinationDirectory string) error {
 		return zip.Extract(source, destinationDirectory)
 	}
 	if urls.IsTarArchive(url) {
-		return tar.Extract(source, destinationDirectory)
+		return tar.Extract(url, source, destinationDirectory)
 	}
 
 	return errors.New("Unsupported archive: " + source)
@@ -154,7 +153,7 @@ func ExtractFiles(url string, files []files.ExtractedFile) error {
 		return zip.ExtractFiles(source, files)
 	}
 	if urls.IsTarArchive(url) {
-		return tar.ExtractFiles(source, files)
+		return tar.ExtractFiles(url, source, files)
 	}
 
 	return errors.New("Unsupported archive: " + source)
