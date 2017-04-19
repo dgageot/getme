@@ -16,26 +16,24 @@ import (
 func Download(url string, destination string, headers []string) error {
 	destinationTmp := destination + ".tmp"
 
-	err := downloadURL(url, destinationTmp, headers)
-	if err == nil {
-		return os.Rename(destinationTmp, destination)
+	actualUrl := url
+	actualHeaders := headers
+
+	if github.ReleaseURL.MatchString(url) {
+		log.Println("Github release url detected")
+
+		assetUrl, err := github.AssetUrl(url, headers)
+		if err != nil {
+			return err
+		}
+
+		log.Println("Github asset url is:", assetUrl)
+
+		actualUrl = assetUrl
+		actualHeaders = append(actualHeaders, "Accept=application/octet-stream")
 	}
 
-	if !github.ReleaseURL.MatchString(url) {
-		return err
-	}
-
-	log.Println("Github release url detected")
-
-	assetUrl, err := github.AssetUrl(url, headers)
-	if err != nil {
-		return err
-	}
-
-	log.Println("Github asset url is:", assetUrl)
-
-	headers = append(headers, "Accept=application/octet-stream")
-	err = downloadURL(assetUrl, destinationTmp, headers)
+	err := downloadURL(actualUrl, destinationTmp, actualHeaders)
 	if err != nil {
 		return err
 	}

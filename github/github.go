@@ -10,10 +10,7 @@ import (
 	"strings"
 )
 
-var (
-	// https://github.com/docker/docker-release/releases/download/1.3-d4w/docker-release-windows-1.3-d4w.zip
-	ReleaseURL = regexp.MustCompile(`https://github.com/([^/]*)/([^/]*)/releases/download/([^/]*)/(.*)`)
-)
+var ReleaseURL = regexp.MustCompile(`https://github.com/([^/]*)/([^/]*)/releases/download/([^/]*)/(.*)`)
 
 type release struct {
 	Assets []asset `json:"assets"`
