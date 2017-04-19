@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+
 	"github.com/dgageot/getme/files"
 	"github.com/dgageot/getme/urls"
 )

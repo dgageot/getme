@@ -2,6 +2,7 @@ package urls
 
 import (
 	"testing"
+
 	"github.com/stretchr/testify/assert"
 )
 
