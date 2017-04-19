@@ -57,7 +57,7 @@ func Extract(source string, destinationFolder string) error {
 	return nil
 }
 
-func ExtractFile(source string, name string, destination string) error {
+func ExtractFiles(source string, filesToExtract []files.ExtractedFile) error {
 	reader, err := os.Open(source)
 	if err != nil {
 		return err
@@ -85,12 +85,13 @@ func ExtractFile(source string, name string, destination string) error {
 			return err
 		}
 
-		if header.Name != name {
+		fileToExtract := files.FindExtractedFile(header.Name, filesToExtract)
+		if fileToExtract == nil {
 			continue
 		}
 
-		return files.CopyFrom(destination, header.FileInfo().Mode(), tarReader)
+		return files.CopyFrom(fileToExtract.Destination, header.FileInfo().Mode(), tarReader)
 	}
 
-	return errors.New("File not found " + name)
+	return errors.New("Files not found")
 }

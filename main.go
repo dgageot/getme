@@ -50,22 +50,29 @@ func main() {
 		Use:     "Extract",
 		Aliases: []string{"Unzip", "UnzipSingleFile"},
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) < 2 {
+				return errors.New("An url, a file name and a destination must be provided")
+			}
+
+			url := args[0]
+
+			// All files
 			if len(args) == 2 {
-				url := args[0]
 				destinationFolder := args[1]
 
-				return Unzip(url, destinationFolder)
+				return Extract(url, destinationFolder)
 			}
 
-			if len(args) == 3 {
-				url := args[0]
-				name := args[1]
-				destination := args[2]
-
-				return UnzipSingleFile(url, name, destination)
+			// Some files
+			extractedFiles := []files.ExtractedFile{}
+			for i := 1; i < len(args); i += 2 {
+				extractedFiles = append(extractedFiles, files.ExtractedFile{
+					Source:      args[i],
+					Destination: args[i+1],
+				})
 			}
 
-			return errors.New("An url, a file name and a destination must be provided")
+			return ExtractFiles(url, extractedFiles)
 		},
 	})
 
@@ -110,9 +117,9 @@ func Copy(url string, destination string) error {
 	return files.Copy(source, destination)
 }
 
-// Download retrieves an url from the cache or download it if it's absent.
+// Extract retrieves an url from the cache or download it if it's absent.
 // Then it unzips the file to a destination directory.
-func Unzip(url string, destinationDirectory string) error {
+func Extract(url string, destinationDirectory string) error {
 	source, err := cache.Download(url, headers())
 	if err != nil {
 		return err
@@ -130,21 +137,23 @@ func Unzip(url string, destinationDirectory string) error {
 	return errors.New("Unsupported archive: " + source)
 }
 
-// Download retrieves an url from the cache or download it if it's absent.
-// Then it unzips a single file from that zip to a destination path.
-func UnzipSingleFile(url string, name string, destination string) error {
+// ExtractFiles retrieves an url from the cache or download it if it's absent.
+// Then it unzips some files from that zip to a destination path.
+func ExtractFiles(url string, files []files.ExtractedFile) error {
 	source, err := cache.Download(url, headers())
 	if err != nil {
 		return err
 	}
 
-	log.Println("Unzip", name, "from", url, "to", destination)
+	for _, file := range files {
+		log.Println("Unzip", file.Source, "from", url, "to", file.Destination)
+	}
 
 	if strings.HasSuffix(source, ".zip") {
-		return zip.ExtractFile(source, name, destination)
+		return zip.ExtractFiles(source, files)
 	}
 	if strings.HasSuffix(source, ".tar") || strings.HasSuffix(source, ".tar.gz") || strings.HasSuffix(source, ".tgz") {
-		return tar.ExtractFile(source, name, destination)
+		return tar.ExtractFiles(source, files)
 	}
 
 	return errors.New("Unsupported archive: " + source)

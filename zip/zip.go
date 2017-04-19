@@ -41,7 +41,7 @@ func Extract(source string, destinationFolder string) error {
 	return nil
 }
 
-func ExtractFile(source string, name string, destination string) error {
+func ExtractFiles(source string, filesToExtract []files.ExtractedFile) error {
 	r, err := zip.OpenReader(source)
 	if err != nil {
 		return err
@@ -49,7 +49,8 @@ func ExtractFile(source string, name string, destination string) error {
 	defer r.Close()
 
 	extractFile := func(f *zip.File) (bool, error) {
-		if f.Name != name {
+		fileToExtract := files.FindExtractedFile(f.Name, filesToExtract)
+		if fileToExtract == nil {
 			return false, nil
 		}
 
@@ -59,7 +60,7 @@ func ExtractFile(source string, name string, destination string) error {
 		}
 		defer rc.Close()
 
-		if err := files.CopyFrom(destination, f.Mode(), rc); err != nil {
+		if err := files.CopyFrom(fileToExtract.Destination, f.Mode(), rc); err != nil {
 			return false, err
 		}
 
@@ -77,5 +78,5 @@ func ExtractFile(source string, name string, destination string) error {
 		}
 	}
 
-	return errors.New("File not found " + name)
+	return errors.New("Files not found")
 }
