@@ -129,7 +129,7 @@ func Extract(url string, destinationDirectory string) error {
 		return err
 	}
 
-	log.Println("Unzip", url, "to", destinationDirectory)
+	log.Println("Extract", url, "to", destinationDirectory)
 
 	if urls.IsZipArchive(url) {
 		return zip.Extract(source, destinationDirectory)
@@ -150,7 +150,7 @@ func ExtractFiles(url string, files []files.ExtractedFile) error {
 	}
 
 	for _, file := range files {
-		log.Println("Unzip", file.Source, "from", url, "to", file.Destination)
+		log.Println("Extract", file.Source, "from", url, "to", file.Destination)
 	}
 
 	if urls.IsZipArchive(url) {
