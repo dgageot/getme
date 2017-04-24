@@ -1,5 +1,11 @@
 # Getme - Downloading dependencies with a cache
 
+https://travis-ci.org/dgageot/getme.svg?branch=master
+
+## Build status
+
+[![Build Status](https://travis-ci.org/dgageot/getme.png?branch=master)](https://travis-ci.org/dgageot/getme)
+
 ## Build
 
 ```
