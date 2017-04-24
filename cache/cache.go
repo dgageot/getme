@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 
 	"github.com/dgageot/getme/files"
@@ -23,12 +24,30 @@ func PathToUrl(url string) (string, error) {
 
 // PathToCache gives the path of the cache.
 func PathToCache() (string, error) {
-	home := os.Getenv("HOME")
-	if home == "" {
-		return "", errors.New("HOME is not defined")
+	home, err := home()
+	if err != nil {
+		return "", err
 	}
 
 	return filepath.Join(home, ".getme"), nil
+}
+
+func home() (string, error) {
+	var home string
+
+	if runtime.GOOS == "windows" {
+		home = os.Getenv("USERPROFILE")
+		if home == "" {
+			return "", errors.New("USERPROFILE is not defined")
+		}
+	} else {
+		home = os.Getenv("HOME")
+		if home == "" {
+			return "", errors.New("HOME is not defined")
+		}
+	}
+
+	return home, nil
 }
 
 // PathToFileInCache gives the path to the file in cache.
