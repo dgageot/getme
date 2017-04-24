@@ -4,4 +4,10 @@ go:
   - 1.8.1
 
 install: true
-script: go test
+
+script:
+  - go build
+  - go test
+  - FILE=$(./getme Download https://github.com/docker/machine/releases/download/v0.10.0/docker-machine-Windows-x86_64.exe) test -f ${FILE}
+  - ./getme Copy https://github.com/docker/machine/releases/download/v0.10.0/docker-machine-Darwin-x86_64 ./docker-machine && test -f docker-machine
+  - ./getme Unzip https://test.docker.com/builds/Darwin/x86_64/docker-17.05.0-ce-rc1.tgz docker/docker docker && test -f docker
