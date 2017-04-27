@@ -15,14 +15,17 @@ import (
 )
 
 var (
-	authToken string
-	force     bool
+	force bool
 )
 
 func main() {
 	var rootCmd = &cobra.Command{Use: "getme"}
 
-	rootCmd.PersistentFlags().StringVar(&authToken, "authToken", "", "Api authentication token")
+	options := files.Options{}
+
+	rootCmd.PersistentFlags().StringVar(&options.AuthToken, "authToken", "", "Api authentication token")
+	rootCmd.PersistentFlags().StringVar(&options.S3AccessKey, "s3AccessKey", "", "Amazon S3 access key")
+	rootCmd.PersistentFlags().StringVar(&options.S3SecretKey, "s3SecretKey", "", "Amazon S3 secret key")
 	rootCmd.PersistentFlags().BoolVar(&force, "force", false, "Force download")
 
 	rootCmd.AddCommand(&cobra.Command{
@@ -33,7 +36,7 @@ func main() {
 			}
 			url := args[0]
 
-			return Download(url)
+			return Download(url, options)
 		},
 	})
 
@@ -46,7 +49,7 @@ func main() {
 			url := args[0]
 			destination := args[1]
 
-			return Copy(url, destination)
+			return Copy(url, options, destination)
 		},
 	})
 
@@ -64,7 +67,7 @@ func main() {
 			if len(args) == 2 {
 				destinationFolder := args[1]
 
-				return Extract(url, destinationFolder)
+				return Extract(url, options, destinationFolder)
 			}
 
 			// Some files
@@ -76,7 +79,7 @@ func main() {
 				})
 			}
 
-			return ExtractFiles(url, extractedFiles)
+			return ExtractFiles(url, options, extractedFiles)
 		},
 	})
 
@@ -94,11 +97,11 @@ func main() {
 
 // Download retrieves an url from the cache or download it if it's absent.
 // Then print the path to that file to stdout.
-func Download(url string) error {
+func Download(url string, options files.Options) error {
 	// Discard all the logs. We only want to output the path to the file
 	log.SetOutput(ioutil.Discard)
 
-	source, err := cache.Download(url, headers(), force)
+	source, err := cache.Download(url, options, force)
 	if err != nil {
 		return err
 	}
@@ -110,8 +113,8 @@ func Download(url string) error {
 
 // Copy retrieves an url from the cache or download it if it's absent.
 // Then it copies the file to a destination path.
-func Copy(url string, destination string) error {
-	source, err := cache.Download(url, headers(), force)
+func Copy(url string, options files.Options, destination string) error {
+	source, err := cache.Download(url, options, force)
 	if err != nil {
 		return err
 	}
@@ -123,8 +126,8 @@ func Copy(url string, destination string) error {
 
 // Extract retrieves an url from the cache or download it if it's absent.
 // Then it unzips the file to a destination directory.
-func Extract(url string, destinationDirectory string) error {
-	source, err := cache.Download(url, headers(), force)
+func Extract(url string, options files.Options, destinationDirectory string) error {
+	source, err := cache.Download(url, options, force)
 	if err != nil {
 		return err
 	}
@@ -143,8 +146,8 @@ func Extract(url string, destinationDirectory string) error {
 
 // ExtractFiles retrieves an url from the cache or download it if it's absent.
 // Then it unzips some files from that zip to a destination path.
-func ExtractFiles(url string, files []files.ExtractedFile) error {
-	source, err := cache.Download(url, headers(), force)
+func ExtractFiles(url string, options files.Options, files []files.ExtractedFile) error {
+	source, err := cache.Download(url, options, force)
 	if err != nil {
 		return err
 	}
@@ -166,12 +169,4 @@ func ExtractFiles(url string, files []files.ExtractedFile) error {
 // Prune prunes the cache.
 func Prune() error {
 	return cache.Prune()
-}
-
-func headers() []string {
-	if authToken == "" {
-		return nil
-	}
-
-	return []string{fmt.Sprintf("Authorization=Bearer %s", authToken)}
 }
