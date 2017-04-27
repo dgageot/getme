@@ -62,7 +62,7 @@ func PathToFileInCache(name string) (string, error) {
 
 // Download downloads an url to the cache if needed. Additional headers can be given.
 // This is helpful to pass authentication tokens.
-func Download(url string, headers []string, force bool) (path string, err error) {
+func Download(url string, options files.Options, force bool) (path string, err error) {
 	destination, err := PathToUrl(url)
 	if err != nil {
 		return "", err
@@ -81,7 +81,7 @@ func Download(url string, headers []string, force bool) (path string, err error)
 
 	log.Println("Download", url, "to", destination)
 
-	return destination, files.Download(url, destination, headers)
+	return destination, files.Download(url, destination, options)
 }
 
 // SaveAccessedUrl appends a url to the file that lists recently accessed urls.
