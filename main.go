@@ -114,6 +114,11 @@ func Download(url string, options files.Options) error {
 // Copy retrieves an url from the cache or download it if it's absent.
 // Then it copies the file to a destination path.
 func Copy(url string, options files.Options, destination string) error {
+	// Discard all the logs. We only want to output the path to the file
+	if destination == "-" {
+		log.SetOutput(ioutil.Discard)
+	}
+
 	source, err := cache.Download(url, options, force)
 	if err != nil {
 		return err
