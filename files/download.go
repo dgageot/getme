@@ -2,7 +2,6 @@ package files
 
 import (
 	"fmt"
-	"io"
 	"log"
 	"net/http"
 	"net/url"
@@ -28,10 +27,26 @@ func Download(rawURL string, destination string, options Options) error {
 	if err != nil {
 		return err
 	}
+
+	destinationTmp := destination + ".tmp"
+
 	if url.Scheme == "s3" {
-		return downloadS3(url, destination, options)
+		if err := downloadS3(url, destinationTmp, options); err != nil {
+			return err
+		}
+	} else {
+		if err := downloadHTTP(rawURL, destinationTmp, headers(options)); err != nil {
+			return err
+		}
 	}
-	return downloadHTTP(rawURL, destination, headers(options))
+
+	if _, err := os.Stat(destination); err == nil {
+		if err := os.Remove(destination); err != nil {
+			return err
+		}
+	}
+
+	return os.Rename(destinationTmp, destination)
 }
 
 func downloadS3(url *url.URL, destination string, options Options) error {
@@ -46,27 +61,10 @@ func downloadS3(url *url.URL, destination string, options Options) error {
 	}
 	defer reader.Close()
 
-	destinationTmp := destination + ".tmp"
-	localFile, err := os.Create(destinationTmp)
-	if err != nil {
-		return err
-	}
-	defer localFile.Close()
-
-	stat, err := reader.Stat()
-	if err != nil {
-		return err
-	}
-
-	if _, err := io.CopyN(localFile, reader, stat.Size); err != nil {
-		return err
-	}
-	return os.Rename(destinationTmp, destination)
+	return CopyFrom(destination, 0666, reader)
 }
 
 func downloadHTTP(url string, destination string, headers []string) error {
-	destinationTmp := destination + ".tmp"
-
 	actualUrl := url
 	actualHeaders := headers
 
@@ -107,18 +105,7 @@ func downloadHTTP(url string, destination string, headers []string) error {
 		actualUrl = artifactUrl
 	}
 
-	err := downloadURL(actualUrl, destinationTmp, actualHeaders)
-	if err != nil {
-		return err
-	}
-
-	if _, err := os.Stat(destination); err == nil {
-		if err := os.Remove(destination); err != nil {
-			return err
-		}
-	}
-
-	return os.Rename(destinationTmp, destination)
+	return downloadURL(actualUrl, destination, actualHeaders)
 }
 
 func isPublicUrl(url string) (bool, error) {
@@ -143,7 +130,6 @@ func isPublicUrl(url string) (bool, error) {
 	}
 
 	return true, nil
-
 }
 
 func downloadURL(url string, destination string, headers []string) error {
