@@ -1,5 +1,9 @@
 package files
 
+import (
+	"github.com/gobwas/glob"
+)
+
 type ExtractedFile struct {
 	Source      string
 	Destination string
@@ -8,10 +12,10 @@ type ExtractedFile struct {
 // FindExtractedFile find a file to be extracted by its name.
 func FindExtractedFile(name string, files []ExtractedFile) *ExtractedFile {
 	for _, file := range files {
-		if file.Source == name {
-			return &file
+		g := glob.MustCompile(file.Source)
+		if g.Match(name) {
+			return &ExtractedFile{Source: name, Destination: file.Destination}
 		}
 	}
-
 	return nil
 }
