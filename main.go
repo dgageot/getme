@@ -84,13 +84,6 @@ func main() {
 		},
 	})
 
-	rootCmd.AddCommand(&cobra.Command{
-		Use: "Prune",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			return Prune()
-		},
-	})
-
 	if err := rootCmd.Execute(); err != nil {
 		log.Fatal(err)
 	}
@@ -170,9 +163,4 @@ func ExtractFiles(url string, options files.Options, files []files.ExtractedFile
 	}
 
 	return errors.New("Unsupported archive: " + source)
-}
-
-// Prune prunes the cache.
-func Prune() error {
-	return cache.Prune()
 }
