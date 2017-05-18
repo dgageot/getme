@@ -24,6 +24,7 @@ func main() {
 	options := files.Options{}
 
 	rootCmd.PersistentFlags().StringVar(&options.AuthToken, "authToken", "", "Api authentication token")
+	rootCmd.PersistentFlags().StringVar(&options.AuthTokenEnvVariable, "authTokenEnvVariable", "", "Env variable containing an api authentication token")
 	rootCmd.PersistentFlags().StringVar(&options.S3AccessKey, "s3AccessKey", "", "Amazon S3 access key")
 	rootCmd.PersistentFlags().StringVar(&options.S3SecretKey, "s3SecretKey", "", "Amazon S3 secret key")
 	rootCmd.PersistentFlags().BoolVar(&force, "force", false, "Force download")
