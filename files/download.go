@@ -15,27 +15,28 @@ import (
 )
 
 type Options struct {
-	AuthToken   string
-	S3AccessKey string
-	S3SecretKey string
+	AuthToken            string
+	AuthTokenEnvVariable string
+	S3AccessKey          string
+	S3SecretKey          string
 }
 
 // Download downloads an url to a destination file. Additional headers can be given.
 // This is helpful to pass authentication tokens.
 func Download(rawURL string, destination string, options Options) error {
-	url, err := url.Parse(rawURL)
+	parsedUrl, err := url.Parse(rawURL)
 	if err != nil {
 		return err
 	}
 
 	destinationTmp := destination + ".tmp"
 
-	if url.Scheme == "s3" {
-		if err := downloadS3(url, destinationTmp, options); err != nil {
+	if parsedUrl.Scheme == "s3" {
+		if err := downloadS3(parsedUrl, destinationTmp, options); err != nil {
 			return err
 		}
 	} else {
-		if err := downloadHTTP(rawURL, destinationTmp, headers(options)); err != nil {
+		if err := downloadHTTP(rawURL, destinationTmp, options.httpHeaders()); err != nil {
 			return err
 		}
 	}
@@ -159,10 +160,17 @@ func noCheckRedirect(req *http.Request, via []*http.Request) error {
 	return http.ErrUseLastResponse
 }
 
-func headers(options Options) []string {
-	if options.AuthToken == "" {
+func (o *Options) authToken() string {
+	if o.AuthTokenEnvVariable != "" {
+		return os.Getenv(o.AuthTokenEnvVariable)
+	}
+	return o.AuthToken
+}
+
+func (o *Options) httpHeaders() []string {
+	authToken := o.authToken()
+	if authToken == "" {
 		return nil
 	}
-
-	return []string{fmt.Sprintf("Authorization=Bearer %s", options.AuthToken)}
+	return []string{fmt.Sprintf("Authorization=Bearer %s", authToken)}
 }
