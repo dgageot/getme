@@ -68,7 +68,7 @@ func Download(url string, options files.Options, force bool) (path string, err e
 	inCache := false
 	if _, err := os.Stat(destination); err == nil {
 		log.Println("Already in cache:", url)
-		inCache = false
+		inCache = true
 	}
 
 	if !force && inCache && options.Sha256 != "" {
