@@ -1,6 +1,9 @@
 package cache
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
+	"io"
 	"log"
 	"os"
 	"path/filepath"
@@ -62,16 +65,44 @@ func Download(url string, options files.Options, force bool) (path string, err e
 		return "", err
 	}
 
-	if !force {
-		if _, err := os.Stat(destination); err == nil {
-			log.Println("Already in cache:", url)
-			return destination, nil
+	inCache := false
+	if _, err := os.Stat(destination); err == nil {
+		log.Println("Already in cache:", url)
+		inCache = false
+	}
+
+	if !force && inCache && options.Sha256 != "" {
+		sha, err := getSha256(destination)
+		if err != nil {
+			return "", err
+		}
+
+		if sha != options.Sha256 {
+			log.Println("Invalid sha256 for ", url)
+			force = true
 		}
 	}
 
-	log.Println("Download", url, "to", destination)
+	if force || !inCache {
+		log.Println("Download", url, "to", destination)
 
-	return destination, files.Download(url, destination, options)
+		if err := files.Download(url, destination, options); err != nil {
+			return "", err
+		}
+	}
+
+	if options.Sha256 != "" {
+		sha, err := getSha256(destination)
+		if err != nil {
+			return "", err
+		}
+
+		if sha != options.Sha256 {
+			return "", errors.New("Invalid sha256 for " + url)
+		}
+	}
+
+	return destination, nil
 }
 
 func sanitizeUrl(url string) string {
@@ -79,4 +110,20 @@ func sanitizeUrl(url string) string {
 	sanitizedUrl = strings.Replace(sanitizedUrl, "/", "-", -1)
 	sanitizedUrl = strings.Replace(sanitizedUrl, ":", "-", -1)
 	return sanitizedUrl
+}
+
+func getSha256(filePath string) (string, error) {
+	file, err := os.Open(filePath)
+	if err != nil {
+		return "", err
+	}
+	defer file.Close()
+
+	hash := sha256.New()
+	_, err = io.Copy(hash, file)
+	if err != nil {
+		return "", err
+	}
+
+	return hex.EncodeToString(hash.Sum(nil)), nil
 }

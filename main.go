@@ -27,6 +27,7 @@ func main() {
 	rootCmd.PersistentFlags().StringVar(&options.AuthTokenEnvVariable, "authTokenEnvVariable", "", "Env variable containing an api authentication token")
 	rootCmd.PersistentFlags().StringVar(&options.S3AccessKey, "s3AccessKey", "", "Amazon S3 access key")
 	rootCmd.PersistentFlags().StringVar(&options.S3SecretKey, "s3SecretKey", "", "Amazon S3 secret key")
+	rootCmd.PersistentFlags().StringVar(&options.Sha256, "sha256", "", "Checksum to check downloaded files")
 	rootCmd.PersistentFlags().BoolVar(&force, "force", false, "Force download")
 
 	rootCmd.AddCommand(&cobra.Command{
