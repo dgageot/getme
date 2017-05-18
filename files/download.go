@@ -19,6 +19,7 @@ type Options struct {
 	AuthTokenEnvVariable string
 	S3AccessKey          string
 	S3SecretKey          string
+	Sha256               string
 }
 
 // Download downloads an url to a destination file. Additional headers can be given.

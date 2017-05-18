@@ -1,8 +1,9 @@
 package cache
 
 import (
-	"bufio"
-	"io/ioutil"
+	"crypto/sha256"
+	"encoding/hex"
+	"io"
 	"log"
 	"os"
 	"path/filepath"
@@ -11,10 +12,6 @@ import (
 
 	"github.com/dgageot/getme/files"
 	"github.com/pkg/errors"
-)
-
-const (
-	recentFile = ".recent"
 )
 
 // PathToUrl gives the path to the file on disk that caches a given url.
@@ -68,121 +65,44 @@ func Download(url string, options files.Options, force bool) (path string, err e
 		return "", err
 	}
 
-	if err := SaveAccessedUrl(url); err != nil {
-		return "", err
+	inCache := false
+	if _, err := os.Stat(destination); err == nil {
+		log.Println("Already in cache:", url)
+		inCache = false
 	}
 
-	if !force {
-		if _, err := os.Stat(destination); err == nil {
-			log.Println("Already in cache:", url)
-			return destination, nil
-		}
-	}
-
-	log.Println("Download", url, "to", destination)
-
-	return destination, files.Download(url, destination, options)
-}
-
-// SaveAccessedUrl appends a url to the file that lists recently accessed urls.
-func SaveAccessedUrl(url string) error {
-	accessFile, err := PathToFileInCache(recentFile)
-	if err != nil {
-		return err
-	}
-
-	if err := files.MkdirAll(filepath.Dir(accessFile)); err != nil {
-		return err
-	}
-
-	f, err := os.OpenFile(accessFile, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-
-	_, err = f.WriteString(url + "\n")
-	return err
-}
-
-// Prune removes any file from cache that were not accessed since last call to Prune.
-func Prune() error {
-	accessFile, err := PathToFileInCache(recentFile)
-	if err != nil {
-		return err
-	}
-
-	recentUrls := []string{}
-
-	if _, err := os.Stat(accessFile); err == nil {
-		// Read recently accessed urls
-		file, err := os.Open(accessFile)
+	if !force && inCache && options.Sha256 != "" {
+		sha, err := getSha256(destination)
 		if err != nil {
-			return err
-		}
-		defer file.Close()
-
-		scanner := bufio.NewScanner(file)
-		for scanner.Scan() {
-			recentUrl := scanner.Text()
-			sanitizedUrl := sanitizeUrl(recentUrl)
-			recentUrls = append(recentUrls, sanitizedUrl)
+			return "", err
 		}
 
-		if err := scanner.Err(); err != nil {
-			return err
+		if sha != options.Sha256 {
+			log.Println("Invalid sha256 for ", url)
+			force = true
 		}
 	}
 
-	// Read urls in cache
-	folderCache, err := PathToCache()
-	if err != nil {
-		return err
+	if force || !inCache {
+		log.Println("Download", url, "to", destination)
+
+		if err := files.Download(url, destination, options); err != nil {
+			return "", err
+		}
 	}
 
-	inCacheSanitizedUrls := []string{}
-	if _, err := os.Stat(folderCache); err == nil {
-		files, err := ioutil.ReadDir(folderCache)
+	if options.Sha256 != "" {
+		sha, err := getSha256(destination)
 		if err != nil {
-			return err
+			return "", err
 		}
 
-		for _, file := range files {
-			name := file.Name()
-			if !strings.HasPrefix(name, ".") {
-				inCacheSanitizedUrls = append(inCacheSanitizedUrls, name)
-			}
-		}
-
-		// Delete files not accessed recently
-		for _, sanitizedUrl := range inCacheSanitizedUrls {
-			if strings.HasPrefix(sanitizedUrl, ".") {
-				continue
-			}
-
-			found := false
-			for _, recent := range recentUrls {
-				if sanitizedUrl == recent {
-					found = true
-					break
-				}
-			}
-
-			if !found {
-				log.Println("Delete", sanitizedUrl)
-
-				if err := os.Remove(filepath.Join(folderCache, sanitizedUrl)); err != nil {
-					return err
-				}
-			}
+		if sha != options.Sha256 {
+			return "", errors.New("Invalid sha256 for " + url)
 		}
 	}
 
-	if _, err := os.Stat(accessFile); err == nil {
-		return os.Remove(accessFile)
-	}
-
-	return nil
+	return destination, nil
 }
 
 func sanitizeUrl(url string) string {
@@ -190,4 +110,20 @@ func sanitizeUrl(url string) string {
 	sanitizedUrl = strings.Replace(sanitizedUrl, "/", "-", -1)
 	sanitizedUrl = strings.Replace(sanitizedUrl, ":", "-", -1)
 	return sanitizedUrl
+}
+
+func getSha256(filePath string) (string, error) {
+	file, err := os.Open(filePath)
+	if err != nil {
+		return "", err
+	}
+	defer file.Close()
+
+	hash := sha256.New()
+	_, err = io.Copy(hash, file)
+	if err != nil {
+		return "", err
+	}
+
+	return hex.EncodeToString(hash.Sum(nil)), nil
 }
