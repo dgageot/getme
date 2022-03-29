@@ -50,7 +50,9 @@ func Extract(url string, source string, destinationFolder string) error {
 		}
 
 		if info.Mode()&os.ModeSymlink == os.ModeSymlink {
-			os.Symlink(header.Linkname, path)
+			if err := os.Symlink(header.Linkname, path); err != nil {
+				return err
+			}
 			continue
 		}
 
