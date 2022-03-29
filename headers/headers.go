@@ -8,7 +8,7 @@ import (
 
 func Add(headers []string, req *http.Request) error {
 	for _, header := range headers {
-		parts := strings.Split(header, "=")
+		parts := strings.SplitN(header, "=", 2)
 		if len(parts) != 2 {
 			return fmt.Errorf("Invalid header [%s]. Should be [key=value]", header)
 		}
