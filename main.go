@@ -90,8 +90,8 @@ func main() {
 	}
 }
 
-// Download retrieves an url from the cache or download it if it's absent.
-// Then print the path to that file to stdout.
+// Download retrieves an url from the cache or downloads it if it's absent.
+// Then, prints the file's path to stdout.
 func Download(url string, options files.Options) error {
 	// Discard all the logs. We only want to output the path to the file
 	log.SetOutput(ioutil.Discard)
@@ -106,8 +106,8 @@ func Download(url string, options files.Options) error {
 	return nil
 }
 
-// Copy retrieves an url from the cache or download it if it's absent.
-// Then it copies the file to a destination path.
+// Copy retrieves an url from the cache or downloads it if it's absent.
+// Then, copies the file to a destination path.
 func Copy(url string, options files.Options, destination string) error {
 	// Discard all the logs. We only want to output the path to the file
 	if destination == "-" {
@@ -124,8 +124,8 @@ func Copy(url string, options files.Options, destination string) error {
 	return files.Copy(source, destination)
 }
 
-// Extract retrieves an url from the cache or download it if it's absent.
-// Then it unzips the file to a destination directory.
+// Extract retrieves an url from the cache or downloads it if it's absent.
+// Then, unzips the file to a destination directory.
 func Extract(url string, options files.Options, destinationDirectory string) error {
 	source, err := cache.Download(url, options, force)
 	if err != nil {
@@ -144,8 +144,8 @@ func Extract(url string, options files.Options, destinationDirectory string) err
 	return errors.New("Unsupported archive: " + source)
 }
 
-// ExtractFiles retrieves an url from the cache or download it if it's absent.
-// Then it unzips some files from that zip to a destination path.
+// ExtractFiles retrieves an url from the cache or downloads it if it's absent.
+// Then, unzips some files from that zip to a destination path.
 func ExtractFiles(url string, options files.Options, files []files.ExtractedFile) error {
 	source, err := cache.Download(url, options, force)
 	if err != nil {
