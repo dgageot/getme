@@ -1,7 +1,7 @@
 package tar
 
 import (
-	archivetar "archive/tar"
+	"archive/tar"
 	"compress/gzip"
 	"errors"
 	"io"
@@ -19,16 +19,16 @@ func Extract(url string, source string, destinationFolder string) error {
 	}
 	defer reader.Close()
 
-	var tarReader *archivetar.Reader
+	var tarReader *tar.Reader
 	if urls.IsGzipArchive(url) {
 		archive, err := gzip.NewReader(reader)
 		if err != nil {
 			return err
 		}
 		defer archive.Close()
-		tarReader = archivetar.NewReader(archive)
+		tarReader = tar.NewReader(archive)
 	} else {
-		tarReader = archivetar.NewReader(reader)
+		tarReader = tar.NewReader(reader)
 	}
 
 	for {
@@ -71,16 +71,16 @@ func ExtractFiles(url string, source string, filesToExtract []files.ExtractedFil
 	}
 	defer reader.Close()
 
-	var tarReader *archivetar.Reader
+	var tarReader *tar.Reader
 	if urls.IsGzipArchive(url) {
 		archive, err := gzip.NewReader(reader)
 		if err != nil {
 			return err
 		}
 		defer archive.Close()
-		tarReader = archivetar.NewReader(archive)
+		tarReader = tar.NewReader(archive)
 	} else {
-		tarReader = archivetar.NewReader(reader)
+		tarReader = tar.NewReader(reader)
 	}
 
 	extracted := 0
